@@ -1,0 +1,228 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: StudySnap - AI-powered study materials generator
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Timeout: 60
+    MemorySize: 256
+
+Resources:
+
+  AppBedrockRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: StudySnapBedrockRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: BedrockInvokePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                  - bedrock:InvokeModelWithResponseStream
+                Resource:
+                  - !Sub 'arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/global.anthropic.claude-haiku-4-5-20251001-v1:0'
+                  - 'arn:aws:bedrock:*::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0'
+                  - 'arn:aws:bedrock:::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0'
+
+  BulletPointSummaryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: studysnap-bullet-point-summary
+      CodeUri: ../lambdas/bullet_point_summary/
+      Handler: run.sh
+      Role: !GetAtt AppBedrockRole.Arn
+      Layers:
+        - !Sub 'arn:aws:lambda:${AWS::Region}:753240598075:layer:LambdaAdapterLayerX86:27'
+      Environment:
+        Variables:
+          AWS_LAMBDA_EXEC_WRAPPER: /opt/bootstrap
+          AWS_LWA_INVOKE_MODE: response_stream
+          PORT: "8080"
+      FunctionUrlConfig:
+        AuthType: NONE
+        InvokeMode: RESPONSE_STREAM
+
+  FlashcardsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: studysnap-flashcards
+      CodeUri: ../lambdas/flashcards/
+      Handler: run.sh
+      Role: !GetAtt AppBedrockRole.Arn
+      Layers:
+        - !Sub 'arn:aws:lambda:${AWS::Region}:753240598075:layer:LambdaAdapterLayerX86:27'
+      Environment:
+        Variables:
+          AWS_LAMBDA_EXEC_WRAPPER: /opt/bootstrap
+          AWS_LWA_INVOKE_MODE: response_stream
+          PORT: "8080"
+      FunctionUrlConfig:
+        AuthType: NONE
+        InvokeMode: RESPONSE_STREAM
+
+  KeyTermsGlossaryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: studysnap-key-terms-glossary
+      CodeUri: ../lambdas/key_terms_glossary/
+      Handler: run.sh
+      Role: !GetAtt AppBedrockRole.Arn
+      Layers:
+        - !Sub 'arn:aws:lambda:${AWS::Region}:753240598075:layer:LambdaAdapterLayerX86:27'
+      Environment:
+        Variables:
+          AWS_LAMBDA_EXEC_WRAPPER: /opt/bootstrap
+          AWS_LWA_INVOKE_MODE: response_stream
+          PORT: "8080"
+      FunctionUrlConfig:
+        AuthType: NONE
+        InvokeMode: RESPONSE_STREAM
+
+  DifficultyTagLevelFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: studysnap-difficulty-tag-level
+      CodeUri: ../lambdas/difficulty_tag_level/
+      Handler: run.sh
+      Role: !GetAtt AppBedrockRole.Arn
+      Layers:
+        - !Sub 'arn:aws:lambda:${AWS::Region}:753240598075:layer:LambdaAdapterLayerX86:27'
+      Environment:
+        Variables:
+          AWS_LAMBDA_EXEC_WRAPPER: /opt/bootstrap
+          AWS_LWA_INVOKE_MODE: response_stream
+          PORT: "8080"
+      FunctionUrlConfig:
+        AuthType: NONE
+        InvokeMode: RESPONSE_STREAM
+
+  EstimatedStudyTimeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: studysnap-estimated-study-time
+      CodeUri: ../lambdas/estimated_study_time/
+      Handler: run.sh
+      Role: !GetAtt AppBedrockRole.Arn
+      Layers:
+        - !Sub 'arn:aws:lambda:${AWS::Region}:753240598075:layer:LambdaAdapterLayerX86:27'
+      Environment:
+        Variables:
+          AWS_LAMBDA_EXEC_WRAPPER: /opt/bootstrap
+          AWS_LWA_INVOKE_MODE: response_stream
+          PORT: "8080"
+      FunctionUrlConfig:
+        AuthType: NONE
+        InvokeMode: RESPONSE_STREAM
+
+  RealWorldExamplesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: studysnap-real-world-examples
+      CodeUri: ../lambdas/real_world_examples/
+      Handler: run.sh
+      Role: !GetAtt AppBedrockRole.Arn
+      Layers:
+        - !Sub 'arn:aws:lambda:${AWS::Region}:753240598075:layer:LambdaAdapterLayerX86:27'
+      Environment:
+        Variables:
+          AWS_LAMBDA_EXEC_WRAPPER: /opt/bootstrap
+          AWS_LWA_INVOKE_MODE: response_stream
+          PORT: "8080"
+      FunctionUrlConfig:
+        AuthType: NONE
+        InvokeMode: RESPONSE_STREAM
+
+  TopicVisualFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: studysnap-topic-visual
+      CodeUri: ../lambdas/topic_visual/
+      Handler: run.sh
+      Role: !GetAtt AppBedrockRole.Arn
+      Layers:
+        - !Sub 'arn:aws:lambda:${AWS::Region}:753240598075:layer:LambdaAdapterLayerX86:27'
+      Environment:
+        Variables:
+          AWS_LAMBDA_EXEC_WRAPPER: /opt/bootstrap
+          AWS_LWA_INVOKE_MODE: response_stream
+          PORT: "8080"
+      FunctionUrlConfig:
+        AuthType: NONE
+        InvokeMode: RESPONSE_STREAM
+
+  InteractiveQuizFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: studysnap-interactive-quiz
+      CodeUri: ../lambdas/interactive_quiz/
+      Handler: run.sh
+      Role: !GetAtt AppBedrockRole.Arn
+      Layers:
+        - !Sub 'arn:aws:lambda:${AWS::Region}:753240598075:layer:LambdaAdapterLayerX86:27'
+      Environment:
+        Variables:
+          AWS_LAMBDA_EXEC_WRAPPER: /opt/bootstrap
+          AWS_LWA_INVOKE_MODE: response_stream
+          PORT: "8080"
+      FunctionUrlConfig:
+        AuthType: NONE
+        InvokeMode: RESPONSE_STREAM
+
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'studysnap-frontend-${AWS::AccountId}'
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Sub '${FrontendBucket.Arn}/*'
+
+Outputs:
+  BulletPointSummaryUrl:
+    Value: !GetAtt BulletPointSummaryFunctionUrl.FunctionUrl
+  FlashcardsUrl:
+    Value: !GetAtt FlashcardsFunctionUrl.FunctionUrl
+  KeyTermsGlossaryUrl:
+    Value: !GetAtt KeyTermsGlossaryFunctionUrl.FunctionUrl
+  DifficultyTagLevelUrl:
+    Value: !GetAtt DifficultyTagLevelFunctionUrl.FunctionUrl
+  EstimatedStudyTimeUrl:
+    Value: !GetAtt EstimatedStudyTimeFunctionUrl.FunctionUrl
+  RealWorldExamplesUrl:
+    Value: !GetAtt RealWorldExamplesFunctionUrl.FunctionUrl
+  TopicVisualUrl:
+    Value: !GetAtt TopicVisualFunctionUrl.FunctionUrl
+  InteractiveQuizUrl:
+    Value: !GetAtt InteractiveQuizFunctionUrl.FunctionUrl
+  WebsiteUrl:
+    Value: !GetAtt FrontendBucket.WebsiteURL
+  BucketName:
+    Value: !Ref FrontendBucket
