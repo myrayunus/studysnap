@@ -1,0 +1,45 @@
+Lambda files created successfully.
+
+Files created:
+
+lambdas/bullet_point_summary/app.py
+lambdas/bullet_point_summary/requirements.txt
+lambdas/bullet_point_summary/run.sh
+
+lambdas/flashcards/app.py
+lambdas/flashcards/requirements.txt
+lambdas/flashcards/run.sh
+
+lambdas/key_terms_glossary/app.py
+lambdas/key_terms_glossary/requirements.txt
+lambdas/key_terms_glossary/run.sh
+
+lambdas/difficulty_tag_level/app.py
+lambdas/difficulty_tag_level/requirements.txt
+lambdas/difficulty_tag_level/run.sh
+
+lambdas/estimated_study_time/app.py
+lambdas/estimated_study_time/requirements.txt
+lambdas/estimated_study_time/run.sh
+
+lambdas/real_world_examples/app.py
+lambdas/real_world_examples/requirements.txt
+lambdas/real_world_examples/run.sh
+
+lambdas/topic_visual/app.py
+lambdas/topic_visual/requirements.txt
+lambdas/topic_visual/run.sh
+
+lambdas/interactive_quiz/app.py
+lambdas/interactive_quiz/requirements.txt
+lambdas/interactive_quiz/run.sh
+
+Total: 24 files across 8 Lambda directories.
+
+Notes:
+- All Lambdas use Flask + boto3 with streaming via Response(stream_with_context(...))
+- Model: global.anthropic.claude-haiku-4-5-20251001-v1:0, region: ap-southeast-1
+- CORS headers applied on all responses including OPTIONS preflight
+- interactive_quiz differs: accepts history[] + message fields, prepends document on first turn,
+  uses system prompt, and uses max_tokens=1024
+- run.sh and requirements.txt are identical across all 8 lambdas
