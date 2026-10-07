@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudySnap — AI Study Assistant</title>
+  <style>
+    /* ===== CSS CUSTOM PROPERTIES ===== */
+    :root {
+      --bg: #0f1117;
+      --card-bg: #1a1d27;
+      --accent: #6c63ff;
+      --text: #e2e8f0;
+      --text-muted: #8892a4;
+      --border: #2d3148;
+      --success: #4ade80;
+      --error: #f87171;
+    }
+
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ===== CUSTOM SCROLLBAR ===== */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--accent);
+      border-radius: 9999px;
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+    }
+
+    .header-logo {
+      font-size: 1.6rem;
+    }
+
+    .header-text h1 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+
+    .header-text h1 span {
+      color: var(--accent);
+    }
+
+    .header-text p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* ===== CONTAINER ===== */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* ===== UPLOAD ZONE ===== */
+    .upload-section {
+      margin-bottom: 2rem;
+    }
+
+    .upload-zone {
+      border: 2px dashed var(--accent);
+      border-radius: 12px;
+      padding: 2.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s ease, background 0.2s ease;
+      background: transparent;
+      position: relative;
+    }
+
+    .upload-zone:hover,
+    .upload-zone.drag-over {
+      border-color: #9d97ff;
+      background: rgba(108, 99, 255, 0.06);
+    }
+
+    .upload-zone input[type="file"] {
+      display: none;
+    }
+
+    .upload-icon {
+      font-size: 3rem;
+      margin-bottom: 0.75rem;
+      display: block;
+    }
+
+    .upload-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.4rem;
+    }
+
+    .upload-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .file-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(108, 99, 255, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(108, 99, 255, 0.3);
+      border-radius: 9999px;
+      padding: 0.35rem 0.9rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin-top: 1rem;
+    }
+
+    .file-badge-icon {
+      font-size: 0.9rem;
+    }
+
+    /* ===== RUN ALL BUTTON ===== */
+    .run-section {
+      margin-bottom: 2rem;
+    }
+
+    .btn-run {
+      width: 100%;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 1rem 2.5rem;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      letter-spacing: 0.01em;
+    }
+
+    .btn-run:hover {
+      background: #7c74ff;
+      box-shadow: 0 4px 20px rgba(108, 99, 255, 0.4);
+    }
+
+    .btn-run:active {
+      transform: translateY(1px);
+    }
+
+    .btn-run:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* ===== OUTPUT GRID ===== */
+    .output-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    /* ===== CARD ===== */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      position: relative;
+      transition: border-color 0.2s ease;
+    }
+
+    .card:hover {
+      border-color: rgba(108, 99, 255, 0.4);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-icon {
+      font-size: 1.5rem;
+      line-height: 1;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* ===== OUTPUT CONTENT ===== */
+    .output-content {
+      height: 340px;
+      overflow-y: auto;
+      font-size: 0.9rem;
+      line-height: 1.7;
+      color: var(--text-muted);
+    }
+
+    .card-topic-visual .output-content {
+      height: auto;
+      min-height: 200px;
+    }
+
+    .output-content p {
+      margin-bottom: 0.5rem;
+    }
+
+    .output-content h2,
+    .output-content h3,
+    .output-content h4 {
+      color: var(--text);
+      margin-bottom: 0.4rem;
+      margin-top: 0.75rem;
+    }
+
+    .output-content h2 { font-size: 1.05rem; }
+    .output-content h3 { font-size: 1rem; }
+    .output-content h4 { font-size: 0.95rem; }
+
+    .output-content li {
+      margin-left: 1.25rem;
+      margin-bottom: 0.3rem;
+      color: var(--text);
+    }
+
+    .output-content code {
+      background: rgba(108, 99, 255, 0.15);
+      color: var(--accent);
+      padding: 0.1em 0.4em;
+      border-radius: 4px;
+      font-family: 'Fira Code', 'Courier New', monospace;
+      font-size: 0.85em;
+    }
+
+    .output-content hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0.75rem 0;
+    }
+
+    .output-content strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .output-content em {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* Placeholder text */
+    .output-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 0.5rem;
+      opacity: 0.4;
+    }
+
+    .output-placeholder-icon {
+      font-size: 2rem;
+    }
+
+    .output-placeholder-text {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* ===== SKELETON LOADING ===== */
+    @keyframes shimmer {
+      0% { background-position: -600px 0; }
+      100% { background-position: 600px 0; }
+    }
+
+    .skeleton {
+      background: linear-gradient(
+        90deg,
+        var(--border) 25%,
+        rgba(108, 99, 255, 0.12) 50%,
+        var(--border) 75%
+      );
+      background-size: 600px 100%;
+      animation: shimmer 1.4s infinite linear;
+      border-radius: 6px;
+    }
+
+    .skeleton-line {
+      height: 14px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+    }
+
+    .skeleton-line.short { width: 60%; }
+    .skeleton-line.medium { width: 80%; }
+    .skeleton-line.full { width: 100%; }
+
+    /* ===== MD-LINE ANIMATION ===== */
+    @keyframes fadein {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .md-line {
+      display: block;
+      animation: fadein 0.3s ease;
+    }
+
+    /* ===== CURSOR BLINK ===== */
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    .cursor-blink::after {
+      content: '';
+      display: inline-block;
+      width: 2px;
+      height: 1em;
+      background: var(--accent);
+      margin-left: 2px;
+      vertical-align: text-bottom;
+      animation: blink 0.8s step-end infinite;
+    }
+
+    /* ===== ERROR MESSAGE ===== */
+    .error-msg {
+      color: var(--error);
+      font-size: 0.875rem;
+      padding: 0.75rem;
+      background: rgba(248, 113, 113, 0.1);
+      border-radius: 6px;
+      border: 1px solid rgba(248, 113, 113, 0.2);
+      display: block;
+    }
+
+    /* ===== FLASHCARD GRID ===== */
+    .flashcard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .flashcard {
+      perspective: 600px;
+      height: 180px;
+      cursor: pointer;
+    }
+
+    .flashcard-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+    }
+
+    .flashcard.flipped .flashcard-inner {
+      transform: rotateY(180deg);
+    }
+
+    .flashcard-front,
+    .flashcard-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      text-align: center;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+
+    .flashcard-front {
+      background: var(--card-bg);
+      border: 1px solid var(--accent);
+      color: var(--text);
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .flashcard-front::before {
+      content: 'Q';
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: rgba(108, 99, 255, 0.15);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    .flashcard-back {
+      background: var(--accent);
+      color: white;
+      transform: rotateY(180deg);
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .flashcard-back::before {
+      content: 'A';
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.7);
+      background: rgba(255,255,255,0.15);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    .flashcard-hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 0.5rem;
+      opacity: 0.7;
+    }
+
+    /* ===== CHAT CARD ===== */
+    .card-chat {
+      margin-bottom: 2rem;
+    }
+
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: 500px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .chat-messages {
+      flex-grow: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.15);
+    }
+
+    .chat-bubble {
+      max-width: 80%;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      word-break: break-word;
+    }
+
+    .chat-bubble.user {
+      align-self: flex-end;
+      background: var(--accent);
+      color: white;
+      border-radius: 12px 12px 2px 12px;
+    }
+
+    .chat-bubble.ai {
+      align-self: flex-start;
+      background: #252839;
+      color: var(--text);
+      border-radius: 12px 12px 12px 2px;
+    }
+
+    .chat-bubble.ai .md-line {
+      display: block;
+    }
+
+    .chat-input-row {
+      display: flex;
+      gap: 0.5rem;
+      padding: 1rem;
+      border-top: 1px solid var(--border);
+      background: var(--card-bg);
+    }
+
+    .chat-input {
+      flex: 1;
+      background: #252839;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+      font-family: inherit;
+    }
+
+    .chat-input:focus {
+      border-color: var(--accent);
+    }
+
+    .chat-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .chat-send-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.75rem 1.25rem;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: background 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .chat-send-btn:hover {
+      background: #7c74ff;
+    }
+
+    .chat-send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .chat-hint {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      text-align: center;
+    }
+
+    /* ===== SECTION LABEL ===== */
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+
+      .output-grid {
+        grid-template-columns: 1fr;
+      }
+
+      header {
+        padding: 1rem;
+      }
+
+      .header-text h1 {
+        font-size: 1.1rem;
+      }
+
+      .chat-container {
+        height: 420px;
+      }
+
+      .btn-run {
+        font-size: 1rem;
+        padding: 0.875rem 1.5rem;
+      }
+
+      .flashcard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .upload-zone {
+        padding: 1.5rem 1rem;
+      }
+
+      .upload-icon {
+        font-size: 2rem;
+      }
+
+      .upload-title {
+        font-size: 0.95rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-logo">📚</div>
+    <div class="header-text">
+      <h1>Study<span>Snap</span></h1>
+      <p>AI-powered study materials from your lecture notes</p>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="container">
+
+    <!-- WIDGET 1: Upload Zone -->
+    <div class="upload-section">
+      <div class="section-label">Step 1 — Upload Your Lecture Notes</div>
+      <div class="upload-zone" id="upload-zone" role="button" tabindex="0" aria-label="Upload lecture notes file">
+        <input type="file" id="file-input" accept=".pdf,.docx,.pptx,.jpg,.jpeg,.png,.webp,.csv,.json,.html" aria-label="Select file">
+        <span class="upload-icon">📄</span>
+        <div class="upload-title">Drag &amp; drop your file here, or click to browse</div>
+        <div class="upload-subtitle">Accepts: PDF, DOCX, PPTX, JPG, PNG, WEBP, CSV, JSON, HTML</div>
+        <div id="file-badge-container"></div>
+      </div>
+    </div>
+
+    <!-- RUN ALL BUTTON -->
+    <div class="run-section">
+      <div class="section-label">Step 2 — Generate Study Materials</div>
+      <button class="btn-run" id="btn-run" onclick="runAll()" aria-label="Generate all study materials">
+        <span>⚡</span>
+        <span>Run All — Generate Study Materials</span>
+      </button>
+    </div>
+
+    <!-- WIDGETS 2–8: Output Grid -->
+    <div class="section-label">Step 3 — Review Your Study Materials</div>
+    <div class="output-grid">
+
+      <!-- Widget 2: Bullet Point Summary -->
+      <div class="card" id="card-summary">
+        <div class="card-header">
+          <span class="card-icon">📋</span>
+          <span class="card-title">Bullet Point Summary</span>
+        </div>
+        <div class="output-content" id="output-bullet-point-summary">
+          <div class="output-placeholder">
+            <span class="output-placeholder-icon">📋</span>
+            <span class="output-placeholder-text">Upload a file and click Run All</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Widget 4: Key Terms Glossary -->
+      <div class="card" id="card-glossary">
+        <div class="card-header">
+          <span class="card-icon">📖</span>
+          <span class="card-title">Key Terms Glossary</span>
+        </div>
+        <div class="output-content" id="output-key-terms-glossary">
+          <div class="output-placeholder">
+            <span class="output-placeholder-icon">📖</span>
+            <span class="output-placeholder-text">Upload a file and click Run All</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Widget 5: Difficulty Level -->
+      <div class="card" id="card-difficulty">
+        <div class="card-header">
+          <span class="card-icon">🎯</span>
+          <span class="card-title">Difficulty Level</span>
+        </div>
+        <div class="output-content" id="output-difficulty-tag-level">
+          <div class="output-placeholder">
+            <span class="output-placeholder-icon">🎯</span>
+            <span class="output-placeholder-text">Upload a file and click Run All</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Widget 6: Estimated Study Time -->
+      <div class="card" id="card-studytime">
+        <div class="card-header">
+          <span class="card-icon">⏱️</span>
+          <span class="card-title">Estimated Study Time</span>
+        </div>
+        <div class="output-content" id="output-estimated-study-time">
+          <div class="output-placeholder">
+            <span class="output-placeholder-icon">⏱️</span>
+            <span class="output-placeholder-text">Upload a file and click Run All</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Widget 7: Real World Examples -->
+      <div class="card" id="card-examples">
+        <div class="card-header">
+          <span class="card-icon">🌍</span>
+          <span class="card-title">Real World Examples</span>
+        </div>
+        <div class="output-content" id="output-real-world-examples">
+          <div class="output-placeholder">
+            <span class="output-placeholder-icon">🌍</span>
+            <span class="output-placeholder-text">Upload a file and click Run All</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Widget 8: Topic Visual -->
+      <div class="card card-topic-visual" id="card-visual">
+        <div class="card-header">
+          <span class="card-icon">🗺️</span>
+          <span class="card-title">Topic Visual</span>
+        </div>
+        <div class="output-content" id="output-topic-visual">
+          <div class="output-placeholder">
+            <span class="output-placeholder-icon">🗺️</span>
+            <span class="output-placeholder-text">Upload a file and click Run All</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Widget 3: Flashcards (full-width below grid) -->
+    <div class="card" id="card-flashcards" style="margin-bottom: 1.5rem;">
+      <div class="card-header">
+        <span class="card-icon">🃏</span>
+        <span class="card-title">Flashcards</span>
+      </div>
+      <div class="output-content" id="output-flashcards">
+        <div class="output-placeholder">
+          <span class="output-placeholder-icon">🃏</span>
+          <span class="output-placeholder-text">Upload a file and click Run All</span>
+        </div>
+      </div>
+      <div id="flashcard-grid-container"></div>
+    </div>
+
+    <!-- Widget 9: Interactive Quiz -->
+    <div class="card card-chat" id="card-quiz">
+      <div class="card-header">
+        <span class="card-icon">🧠</span>
+        <span class="card-title">Interactive Quiz</span>
+      </div>
+      <div class="chat-container">
+        <div class="chat-messages" id="chat-messages" role="log" aria-live="polite" aria-label="Chat conversation">
+          <div class="chat-bubble ai">
+            👋 Hi! I'm your interactive quiz tutor. Upload your lecture notes, then type <strong>"start"</strong> to begin a 5-question multiple-choice quiz based on your notes!
+          </div>
+        </div>
+        <div class="chat-input-row">
+          <input
+            type="text"
+            class="chat-input"
+            id="chat-input"
+            placeholder='Type "start" to begin the quiz...'
+            aria-label="Chat message input"
+            autocomplete="off"
+          >
+          <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatMessage()" aria-label="Send message">Send ↑</button>
+        </div>
+      </div>
+      <p class="chat-hint">Tip: Make sure you've uploaded your lecture notes before starting the quiz for best results.</p>
+    </div>
+
+  </main>
+
+  <script>
+    /* ===== URL MAP — placeholders replaced by GitHub Actions ===== */
+    const STREAM_URLS = {
+      bullet_point_summary:  '__URL_BULLET_POINT_SUMMARY__',
+      flashcards:            '__URL_FLASHCARDS__',
+      key_terms_glossary:    '__URL_KEY_TERMS_GLOSSARY__',
+      difficulty_tag_level:  '__URL_DIFFICULTY_TAG_LEVEL__',
+      estimated_study_time:  '__URL_ESTIMATED_STUDY_TIME__',
+      real_world_examples:   '__URL_REAL_WORLD_EXAMPLES__',
+      topic_visual:          '__URL_TOPIC_VISUAL__',
+      interactive_quiz:      '__URL_INTERACTIVE_QUIZ__',
+    };
+
+    /* ===== GLOBAL STATE ===== */
+    window.fileData = null;
+    window.fileMime = null;
+    let chatHistory = [];
+    let isStreaming = false;
+
+    /* ===== FILE UPLOAD ===== */
+    const uploadZone = document.getElementById('upload-zone');
+    const fileInput  = document.getElementById('file-input');
+
+    uploadZone.addEventListener('click', () => fileInput.click());
+    uploadZone.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        fileInput.click();
+      }
+    });
+
+    uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadZone.classList.add('drag-over');
+    });
+
+    uploadZone.addEventListener('dragleave', (e) => {
+      if (!uploadZone.contains(e.relatedTarget)) {
+        uploadZone.classList.remove('drag-over');
+      }
+    });
+
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) handleFile(file);
+    });
+
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (file) handleFile(file);
+    });
+
+    function handleFile(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target.result;
+        // Strip the "data:<mime>;base64," prefix
+        const commaIdx = dataUrl.indexOf(',');
+        window.fileData = dataUrl.substring(commaIdx + 1);
+        window.fileMime = file.type || 'application/octet-stream';
+        showFileBadge(file.name, file.size);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function showFileBadge(name, size) {
+      const container = document.getElementById('file-badge-container');
+      const formattedSize = formatBytes(size);
+      container.innerHTML = `
+        <div class="file-badge">
+          <span class="file-badge-icon">✅</span>
+          <span>${escapeHtml(name)}</span>
+          <span style="opacity:0.6">(${formattedSize})</span>
+        </div>
+      `;
+    }
+
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    /* ===== MARKDOWN RENDERER ===== */
+    function renderMarkdown(text) {
+      // Process headings first (anchored to start of line)
+      if (/^### (.+)/.test(text)) {
+        return text.replace(/^### (.+)/, '<h4>$1</h4>');
+      }
+      if (/^## (.+)/.test(text)) {
+        return text.replace(/^## (.+)/, '<h3>$1</h3>');
+      }
+      if (/^# (.+)/.test(text)) {
+        return text.replace(/^# (.+)/, '<h2>$1</h2>');
+      }
+      if (/^---$/.test(text.trim())) {
+        return '<hr>';
+      }
+      // Process bullet lists
+      if (/^[-*] (.+)/.test(text)) {
+        return text.replace(/^[-*] (.+)/, '<li>$1</li>');
+      }
+      // Numbered lists
+      if (/^\d+\. (.+)/.test(text)) {
+        return text.replace(/^\d+\. (.+)/, '<li>$1</li>');
+      }
+      // Inline formatting — apply to remaining text
+      let result = text;
+      result = result.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      result = result.replace(/\*(.+?)\*/g, '<em>$1</em>');
+      result = result.replace(/`(.+?)`/g, '<code>$1</code>');
+      // Wrap plain text in <p> if not already an HTML tag
+      if (result.trim() && !result.trim().startsWith('<')) {
+        result = `<p>${result}</p>`;
+      }
+      return result;
+    }
+
+    /* ===== STREAMING HELPER ===== */
+    async function streamToElement(url, payload, outputEl, onChunk) {
+      outputEl.innerHTML = '';
+
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let lastSpan = null;
+
+      function renderLine(text) {
+        // Remove blinking cursor from previous line
+        if (lastSpan) {
+          lastSpan.classList.remove('cursor-blink');
+        }
+        if (!text.trim()) return;
+        const span = document.createElement('span');
+        span.className = 'md-line cursor-blink';
+        span.innerHTML = renderMarkdown(text);
+        outputEl.appendChild(span);
+        lastSpan = span;
+        if (onChunk) onChunk(text);
+        // Auto-scroll
+        outputEl.scrollTop = outputEl.scrollHeight;
+      }
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          if (buffer.trim()) renderLine(buffer);
+          // Remove final cursor
+          if (lastSpan) lastSpan.classList.remove('cursor-blink');
+          break;
+        }
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // last incomplete chunk stays in buffer
+        for (const line of lines) {
+          renderLine(line);
+        }
+      }
+    }
+
+    /* ===== SKELETON LOADER ===== */
+    function showSkeleton(el) {
+      el.innerHTML = `
+        <div class="skeleton skeleton-line full"></div>
+        <div class="skeleton skeleton-line medium"></div>
+        <div class="skeleton skeleton-line full"></div>
+        <div class="skeleton skeleton-line short"></div>
+        <div class="skeleton skeleton-line full"></div>
+        <div class="skeleton skeleton-line medium"></div>
+      `;
+    }
+
+    /* ===== FLASHCARD PARSING & RENDERING ===== */
+    function parseAndRenderFlashcards(text) {
+      const container = document.getElementById('flashcard-grid-container');
+      container.innerHTML = '';
+
+      const cards = [];
+
+      // Try to match Q: / A: or Question: / Answer: patterns
+      const qaPattern = /(?:Q(?:uestion)?[\s\d]*[:.]\s*)(.+?)(?:\n|\r\n?)(?:A(?:nswer)?[\s\d]*[:.]\s*)(.+?)(?=(?:\n\s*\n|\n(?:Q(?:uestion)?[\s\d]*[:.])|$))/gis;
+      let match;
+      while ((match = qaPattern.exec(text)) !== null) {
+        cards.push({ q: match[1].trim(), a: match[2].trim() });
+      }
+
+      // Fallback: numbered flashcard blocks
+      if (cards.length === 0) {
+        const blockPattern = /(?:Flashcard\s*\d+|Card\s*\d+)[:\s]*\n?Q[:\s]+(.+?)\nA[:\s]+(.+?)(?=\n(?:Flashcard|Card|\d+\.)|$)/gis;
+        while ((match = blockPattern.exec(text)) !== null) {
+          cards.push({ q: match[1].trim(), a: match[2].trim() });
+        }
+      }
+
+      if (cards.length === 0) return;
+
+      const grid = document.createElement('div');
+      grid.className = 'flashcard-grid';
+
+      cards.forEach(({ q, a }) => {
+        const card = document.createElement('div');
+        card.className = 'flashcard';
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('aria-label', `Flashcard: ${q}`);
+        card.innerHTML = `
+          <div class="flashcard-inner">
+            <div class="flashcard-front">${escapeHtml(q)}</div>
+            <div class="flashcard-back">${escapeHtml(a)}</div>
+          </div>
+        `;
+        card.addEventListener('click', () => card.classList.toggle('flipped'));
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            card.classList.toggle('flipped');
+          }
+        });
+        grid.appendChild(card);
+      });
+
+      container.appendChild(grid);
+
+      const hint = document.createElement('p');
+      hint.className = 'flashcard-hint';
+      hint.textContent = '💡 Click any card to flip and reveal the answer';
+      container.appendChild(hint);
+    }
+
+    /* ===== STREAM WIDGET ===== */
+    async function streamWidget(widgetKey, payload, postProcess) {
+      const idMap = {
+        bullet_point_summary: 'output-bullet-point-summary',
+        flashcards:           'output-flashcards',
+        key_terms_glossary:   'output-key-terms-glossary',
+        difficulty_tag_level: 'output-difficulty-tag-level',
+        estimated_study_time: 'output-estimated-study-time',
+        real_world_examples:  'output-real-world-examples',
+        topic_visual:         'output-topic-visual',
+      };
+
+      const elId = idMap[widgetKey];
+      if (!elId) return;
+
+      const outputEl = document.getElementById(elId);
+      if (!outputEl) return;
+
+      showSkeleton(outputEl);
+
+      let fullText = '';
+
+      try {
+        const url = STREAM_URLS[widgetKey];
+        await streamToElement(url, payload, outputEl, (chunk) => {
+          fullText += chunk + '\n';
+        });
+        if (postProcess) postProcess(fullText);
+      } catch (err) {
+        outputEl.innerHTML = `<span class="error-msg">⚠️ ${escapeHtml(err.message)}</span>`;
+      }
+    }
+
+    /* ===== RUN ALL ===== */
+    async function runAll() {
+      if (!window.fileData) {
+        alert('Please upload a lecture notes file first.');
+        return;
+      }
+
+      const btn = document.getElementById('btn-run');
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳</span><span>Generating study materials…</span>';
+
+      const payload = {
+        file_data: window.fileData,
+        file_mime: window.fileMime,
+      };
+
+      const tasks = [
+        streamWidget('bullet_point_summary', payload),
+        streamWidget('flashcards', payload, parseAndRenderFlashcards),
+        streamWidget('key_terms_glossary', payload),
+        streamWidget('difficulty_tag_level', payload),
+        streamWidget('estimated_study_time', payload),
+        streamWidget('real_world_examples', payload),
+        streamWidget('topic_visual', payload),
+      ];
+
+      await Promise.allSettled(tasks);
+
+      btn.disabled = false;
+      btn.innerHTML = '<span>✅</span><span>Done! Click to Regenerate</span>';
+    }
+
+    /* ===== CHAT ===== */
+    async function sendChatMessage() {
+      const input = document.getElementById('chat-input');
+      const sendBtn = document.getElementById('chat-send-btn');
+      const message = input.value.trim();
+      if (!message || isStreaming) return;
+
+      input.value = '';
+      isStreaming = true;
+      sendBtn.disabled = true;
+
+      appendChatBubble('user', message);
+
+      const aiBubble = appendChatBubble('ai', '');
+      aiBubble.innerHTML = ''; // clear so streamToElement can populate
+
+      const payload = {
+        file_data: window.fileData || null,
+        file_mime: window.fileMime || '',
+        history: chatHistory,
+        message: message,
+      };
+
+      let fullReply = '';
+      try {
+        await streamToElement(STREAM_URLS.interactive_quiz, payload, aiBubble, (chunk) => {
+          fullReply += chunk + '\n';
+        });
+      } catch (e) {
+        aiBubble.innerHTML = `<span class="error-msg">⚠️ ${escapeHtml(e.message)}</span>`;
+        isStreaming = false;
+        sendBtn.disabled = false;
+        return;
+      }
+
+      chatHistory.push({ role: 'user', content: message });
+      chatHistory.push({ role: 'assistant', content: fullReply.trim() });
+
+      isStreaming = false;
+      sendBtn.disabled = false;
+      input.focus();
+    }
+
+    function appendChatBubble(role, text) {
+      const msgs = document.getElementById('chat-messages');
+      const bubble = document.createElement('div');
+      bubble.className = `chat-bubble ${role}`;
+      if (text) bubble.textContent = text;
+      msgs.appendChild(bubble);
+      msgs.scrollTop = msgs.scrollHeight;
+      return bubble;
+    }
+
+    /* ===== CHAT: Enter key support ===== */
+    document.getElementById('chat-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendChatMessage();
+      }
+    });
+  </script>
+
+</body>
+</html>
