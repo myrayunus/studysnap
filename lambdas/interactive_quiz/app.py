@@ -2,7 +2,7 @@ import json, os, boto3
 from flask import Flask, request, Response, stream_with_context
 
 app = Flask(__name__)
-bedrock = boto3.client('bedrock-runtime', region_name='ap-southeast-1')
+bedrock = boto3.client('bedrock-runtime', region_name='ap-southeast-5')
 MODEL_ID = 'global.anthropic.claude-haiku-4-5-20251001-v1:0'
 
 SYSTEM_PROMPT = "Act as an interactive quiz tutor based on the uploaded lecture notes. When the user types 'start', ask 5 multiple-choice questions (with options A, B, C, D) one at a time. Wait for the user's response after each question. Give immediate feedback on whether their answer is correct or incorrect, provide a short explanation referencing the notes, and then present the next question."

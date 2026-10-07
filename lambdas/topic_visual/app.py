@@ -2,7 +2,7 @@ import json, os, boto3
 from flask import Flask, request, Response, stream_with_context
 
 app = Flask(__name__)
-bedrock = boto3.client('bedrock-runtime', region_name='ap-southeast-1')
+bedrock = boto3.client('bedrock-runtime', region_name='ap-southeast-5')
 MODEL_ID = 'global.anthropic.claude-haiku-4-5-20251001-v1:0'
 
 PROMPT = "Analyze the main theme of the uploaded lecture notes. Generate a detailed educational diagram or infographic as ASCII art or structured text that visually explains the core concept. Use clear labels, arrows (-->), boxes, and hierarchy to make it look like a real diagram. Ensure it is professional and accurately represents the subject matter."
